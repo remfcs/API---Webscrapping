@@ -4,6 +4,7 @@ from fastapi import HTTPException
 import os 
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.model_selection import train_test_split
 
 IRIS_DATASET_PATH = "src/data/iris/iris.csv"
 CONFIG_PATH = "src/config/datasets.json"
@@ -71,9 +72,43 @@ def process_dataset(csv_path: str):
     """
     try:
         # Load the dataset
+        print("y")
         df = pd.read_csv(csv_path)
+        print("z")
         df['Species'] = df['Species'].str.split('-').str[1]
         json_data = df.to_dict(orient="records")
         return json_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to process dataset: {e}")
+
+
+def split_set(data_json, test_size=0.2, random_state=42):
+    """
+    Split a processed dataset (provided as JSON) into train and test sets.
+
+    Parameters:
+        data_json (list or dict): The dataset to split, provided as a JSON-like structure (list of dictionaries).
+        test_size (float): Fraction of the dataset to use as the test set. Default is 0.2.
+        random_state (int): Random seed for reproducibility. Default is 42.
+
+    Returns:
+        dict: A dictionary containing the train and test datasets as JSON.
+    """
+    try:
+        # Convert JSON input to DataFrame
+        df = pd.DataFrame(data_json)
+
+        # Split the dataset
+        train_df, test_df = train_test_split(df, test_size=test_size, random_state=random_state)
+
+        # Convert the train and test DataFrames back to JSON
+        train_json = train_df.to_dict(orient="records")
+        test_json = test_df.to_dict(orient="records")
+
+        return {
+            "message": "Dataset split successfully.",
+            "train_data": train_json,
+            "test_data": test_json,
+        }
+    except Exception as e:
+        raise ValueError(f"Failed to split dataset: {e}")

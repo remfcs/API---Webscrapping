@@ -82,5 +82,19 @@ async def process_dataset_endpoint():
     result = process_dataset(IRIS_DATASET_PATH)
     return result
 
+@router.get("/split-dataset", tags=["Dataset"])
+async def split_dataset_endpoint(test_size: float = 0.2, random_state: int = 42):
+    """
+    Endpoint to split the processed dataset into train and test sets.
+    """
+    if not os.path.exists(IRIS_DATASET_PATH):
+        raise HTTPException(status_code=404, detail=f"Dataset not found at {DATASET_PATH}")
 
-
+    # Process the dataset
+    df = process_dataset(IRIS_DATASET_PATH)
+    try:
+        output = split_set(df)
+        return output
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to split dataset: {e}")
+    
