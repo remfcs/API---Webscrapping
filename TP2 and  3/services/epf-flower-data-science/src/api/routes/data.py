@@ -9,7 +9,7 @@ from src.services.data import *
 router = APIRouter()
 
 # Config paths
-
+IRIS_DATASET_PATH = "src/data/iris/iris.csv"
 # Route: Get dataset details
 @router.get("/dataset/{dataset_name}", tags=["Dataset"])
 async def get_dataset(dataset_name: str):
@@ -69,3 +69,18 @@ async def load_dataset(dataset_name: str):
         "message": f"Dataset '{dataset_name}' downloaded and converted to JSON successfully.",
         "json_path": json_file_path
     }
+    
+@router.get("/process-dataset", tags=["Dataset"])
+async def process_dataset_endpoint():
+    """
+    Endpoint to process the dataset.
+    """
+    if not os.path.exists(IRIS_DATASET_PATH):
+        raise HTTPException(status_code=404, detail=f"Dataset not found at {IRIS_DATASET_PATH}")
+
+    # Process the dataset
+    result = process_dataset(IRIS_DATASET_PATH)
+    return result
+
+
+
