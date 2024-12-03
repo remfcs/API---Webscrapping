@@ -1,0 +1,10 @@
+{
+    "iris": {
+        "name": "iris",
+        "url": "https://www.kaggle.com/datasets/uciml/iris"
+    },
+    "vehicule": {
+        "name": "vehicule",
+        "url": "https://data.ca.gov/dataset/vehicle-fuel-type-count-by-zip-code/resource/1856386b-a196-4e7c-be81-44174e29ad50"
+    }
+}
