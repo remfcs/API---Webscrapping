@@ -180,3 +180,42 @@ async def retrieve_parameters_endpoint():
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")
+
+@router.post("/add-parameters", tags=["Firestore"])
+async def add_parameters_endpoint(parameters: dict):
+    """
+    Endpoint to add parameters to Firestore.
+
+    Args:
+        parameters (dict): Parameters to add.
+
+    Returns:
+        dict: Confirmation message with added data.
+    """
+    try:
+        result = add_or_update_parameters(parameters)
+        return result
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")
+
+
+@router.put("/update-parameters", tags=["Firestore"])
+async def update_parameters_endpoint(parameters: dict):
+    """
+    Endpoint to update parameters in Firestore.
+
+    Args:
+        parameters (dict): Parameters to update.
+
+    Returns:
+        dict: Confirmation message with updated data.
+    """
+    try:
+        result = add_or_update_parameters(parameters)
+        return result
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")

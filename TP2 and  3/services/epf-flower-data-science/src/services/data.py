@@ -248,3 +248,28 @@ def get_firestore_parameters():
         return doc.to_dict()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve parameters: {e}")
+
+def add_or_update_parameters(data: dict):
+    """
+    Add or update parameters in Firestore.
+
+    Args:
+        data (dict): A dictionary of parameters to add or update.
+
+    Returns:
+        dict: Confirmation message with updated data.
+    """
+    try:
+        # Initialize Firestore client
+        db = firestore.Client()
+
+        # Reference the 'parameters' collection and 'parameters' document
+        doc_ref = db.collection("parameters").document("parameters")
+
+        # Merge the new data into the existing document
+        doc_ref.set(data, merge=True)  # merge=True ensures existing fields are preserved
+
+        # Return success message
+        return {"message": "Parameters updated successfully.", "updated_data": data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update parameters: {e}")
