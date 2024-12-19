@@ -5,11 +5,16 @@ import os
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
+import joblib
+from sklearn.linear_model import LogisticRegression
 
 IRIS_DATASET_PATH = "src/data/iris/iris.csv"
 CONFIG_PATH = "src/config/datasets.json"
 DATASET_PATH = "src/data"
-
+MODEL_PARAMETERS_PATH = "src/config/model_parameters.json"
+MODEL_DIR = "src/models"
+os.makedirs(MODEL_DIR, exist_ok=True)
+    
 def save_config(config):
     """
     Save updates to the JSON configuration file.
@@ -101,7 +106,6 @@ def split_set(data_json, test_size=0.2, random_state=42):
         # Split the dataset
         train_df, test_df = train_test_split(df, test_size=test_size, random_state=random_state)
 
-        # Convert the train and test DataFrames back to JSON
         train_json = train_df.to_dict(orient="records")
         test_json = test_df.to_dict(orient="records")
 
@@ -112,3 +116,61 @@ def split_set(data_json, test_size=0.2, random_state=42):
         }
     except Exception as e:
         raise ValueError(f"Failed to split dataset: {e}")
+    
+def load_model_parameters(model_name: str):
+    """
+    Load model parameters from the configuration file.
+    """
+    if not os.path.exists(MODEL_PARAMETERS_PATH):
+        raise FileNotFoundError(f"Configuration file not found at {MODEL_PARAMETERS_PATH}.")
+    
+    with open(MODEL_PARAMETERS_PATH, "r") as file:
+        config = json.load(file)
+    
+    if model_name not in config:
+        raise ValueError(f"Model '{model_name}' not found in configuration file.")
+    
+    return config[model_name]
+
+def train_model(data_json, model_name="LogisticRegression", target_column="Species"):
+    """
+    Train a classification model and save it to the models directory.
+
+    Parameters:
+        data_json (list): The processed dataset in JSON format.
+        model_name (str): The name of the model to train.
+        target_column (str): The column to use as the target variable.
+
+    Returns:
+        str: Path to the saved model.
+    """
+    from sklearn.model_selection import train_test_split
+
+    # Convert JSON to DataFrame
+    import pandas as pd
+    df = pd.DataFrame(data_json)
+
+    # Separate features and target
+    X = df.drop(columns=[target_column])
+    y = df[target_column]
+
+    # Load model parameters
+    params = load_model_parameters(model_name)
+
+    # Train the model
+    if model_name == "LogisticRegression":
+        model = LogisticRegression(**params)
+    else:
+        raise ValueError(f"Model '{model_name}' is not supported.")
+
+    # Split the dataset into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Fit the model
+    model.fit(X_train, y_train)
+
+    # Save the model
+    model_path = os.path.join(MODEL_DIR, f"{model_name}.joblib")
+    joblib.dump(model, model_path)
+
+    return model_path

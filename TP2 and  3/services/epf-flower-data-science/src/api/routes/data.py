@@ -1,15 +1,15 @@
-import json
 import os
 from fastapi import APIRouter, HTTPException
 import pandas as pd
-import requests
 from kaggle.api.kaggle_api_extended import KaggleApi
 from src.services.data import *
+from typing import List, Dict
 
 router = APIRouter()
 
 # Config paths
 IRIS_DATASET_PATH = "src/data/iris/iris.csv"
+
 # Route: Get dataset details
 @router.get("/dataset/{dataset_name}", tags=["Dataset"])
 async def get_dataset(dataset_name: str):
@@ -97,4 +97,28 @@ async def split_dataset_endpoint(test_size: float = 0.2, random_state: int = 42)
         return output
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to split dataset: {e}")
+    
+    
+
+@router.post("/train-model", tags=["Model"])
+async def train_model_endpoint(model_name: str = "LogisticRegression", target_column: str = "Species"):
+    """
+    Endpoint to train a classification model.
+    
+    Parameters:
+        model_name (str): The name of the model to train.
+        target_column (str): The target column to use for training.
+
+    Returns:
+        dict: A success message with the saved model's path.
+    """
+    try:
+        data = process_dataset(IRIS_DATASET_PATH)
+
+        model_path = train_model(data, model_name=model_name, target_column=target_column)
+
+        return {"message": "Model trained and saved successfully.", "model_path": model_path}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to train model: {e}")
+
     
