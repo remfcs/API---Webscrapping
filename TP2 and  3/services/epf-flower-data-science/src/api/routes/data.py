@@ -158,3 +158,25 @@ async def predict_endpoint(
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")
+
+@router.get("/retrieve-parameters", tags=["Firestore"])
+async def retrieve_parameters_endpoint():
+    """
+    Endpoint to retrieve parameters from Firestore.
+
+    Returns:
+        dict: The parameters retrieved from Firestore.
+    """
+    try:
+        # Call the function to fetch parameters
+        parameters = get_firestore_parameters()
+
+        # Return success response with parameters
+        return {
+            "message": "Parameters retrieved successfully.",
+            "parameters": parameters
+        }
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")

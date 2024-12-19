@@ -7,6 +7,7 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
 import joblib
 from sklearn.linear_model import LogisticRegression
+from google.cloud import firestore
 
 IRIS_DATASET_PATH = "src/data/iris/iris.csv"
 CONFIG_PATH = "src/config/datasets.json"
@@ -14,7 +15,8 @@ DATASET_PATH = "src/data"
 MODEL_PARAMETERS_PATH = "src/config/model_parameters.json"
 MODEL_DIR = "src/models"
 os.makedirs(MODEL_DIR, exist_ok=True)
-    
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google.json"
+
 def save_config(config):
     """
     Save updates to the JSON configuration file.
@@ -223,3 +225,26 @@ def make_predictions(model, data):
         return predictions.tolist()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to make predictions: {e}")
+    
+def get_firestore_parameters():
+    """
+    Retrieve parameters from Firestore.
+    
+    Returns:
+        dict: The parameters stored in the Firestore 'parameters' collection.
+    """
+    try:
+        # Initialize Firestore client
+        db = firestore.Client()
+
+        # Access the 'parameters' collection and 'parameters' document
+        doc_ref = db.collection("parameters").document("parameters")
+        doc = doc_ref.get()
+
+        if not doc.exists:
+            raise ValueError("The document 'parameters' does not exist in Firestore.")
+
+        # Return the document data as a dictionary
+        return doc.to_dict()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve parameters: {e}")
