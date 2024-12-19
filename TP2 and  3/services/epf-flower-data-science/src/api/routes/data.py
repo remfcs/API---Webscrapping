@@ -114,11 +114,47 @@ async def train_model_endpoint(model_name: str = "LogisticRegression", target_co
     """
     try:
         data = process_dataset(IRIS_DATASET_PATH)
+        data = process_dataset(IRIS_DATASET_PATH)
 
-        model_path = train_model(data, model_name=model_name, target_column=target_column)
+        output = split_set(data)
+        
+        model_path = train_model(output["train_data"], model_name=model_name, target_column=target_column)
 
         return {"message": "Model trained and saved successfully.", "model_path": model_path}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to train model: {e}")
 
-    
+@router.post("/predict", tags=["Model"])
+async def predict_endpoint(
+    model_name: str = "LogisticRegression",
+    input_data: List[Dict] = []):
+    """
+    Endpoint to make predictions using a trained model.
+    [
+        {
+            "SepalLengthCm": 5.0,
+            "SepalWidthCm": 3.4,
+            "PetalLengthCm": 1.5,
+            "PetalWidthCm": 0.2
+        }
+    ]
+    Parameters:
+        model_name (str): The name of the trained model to use for predictions.
+        input_data (List[Dict]): Input features in JSON format.
+
+    Returns:
+        dict: Predictions made by the model.
+    """
+    try:
+        model = load_trained_model(model_name)
+
+        predictions = make_predictions(model, input_data)
+
+        return {
+            "message": "Predictions made successfully.",
+            "predictions": predictions
+        }
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")

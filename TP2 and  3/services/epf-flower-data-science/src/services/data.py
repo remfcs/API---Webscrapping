@@ -150,6 +150,9 @@ def train_model(data_json, model_name="LogisticRegression", target_column="Speci
     import pandas as pd
     df = pd.DataFrame(data_json)
 
+    if 'Id' in df.columns:
+        df = df.drop(columns=['Id'])
+        
     # Separate features and target
     X = df.drop(columns=[target_column])
     y = df[target_column]
@@ -174,3 +177,49 @@ def train_model(data_json, model_name="LogisticRegression", target_column="Speci
     joblib.dump(model, model_path)
 
     return model_path
+
+
+
+def load_trained_model(model_name: str):
+    """
+    Load the trained model from the models directory.
+    
+    Parameters:
+        model_name (str): Name of the model to load (e.g., 'LogisticRegression').
+
+    Returns:
+        model: The trained model.
+    """
+    model_path = os.path.join(MODEL_DIR, f"{model_name}.joblib")
+    if not os.path.exists(model_path):
+        raise HTTPException(status_code=404, detail=f"Model '{model_name}' not found at {model_path}.")
+    
+    try:
+        model = joblib.load(model_path)
+        return model
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load model '{model_name}': {e}")
+
+
+def make_predictions(model, data):
+    """
+    Make predictions using the trained model.
+
+    Parameters:
+        model: The trained classification model.
+        input_data (List[Dict]): Input features in JSON format.
+
+    Returns:
+        List: Predictions made by the model.
+    """
+    try:
+        # Convert input JSON data to a pandas DataFrame
+        input_df = pd.DataFrame(data)
+
+        # Make predictions
+        predictions = model.predict(input_df)
+
+        # Return predictions as a list
+        return predictions.tolist()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to make predictions: {e}")
