@@ -7,10 +7,8 @@ from typing import List, Dict
 
 router = APIRouter()
 
-# Config paths
 IRIS_DATASET_PATH = "src/data/iris/iris.csv"
 
-# Route: Get dataset details
 @router.get("/dataset/{dataset_name}", tags=["Dataset"])
 async def get_dataset(dataset_name: str):
     """
@@ -21,7 +19,6 @@ async def get_dataset(dataset_name: str):
         raise HTTPException(status_code=404, detail="Dataset not found in config.")
     return config[dataset_name]
 
-# Route: Add a new dataset
 @router.post("/dataset", tags=["Dataset"])
 async def add_dataset(name: str, url: str):
     """
@@ -29,13 +26,19 @@ async def add_dataset(name: str, url: str):
     """
     config = load_config()
     if name in config:
-        raise HTTPException(status_code=400, detail="Dataset already exists.")
-    
-    config[name] = {"name": name, "url": url}
-    save_config(config)
-    return {"message": "Dataset added successfully.", "dataset": config[name]}
+        # Au lieu de lever une erreur, on met simplement à jour l'URL
+        config[name]["url"] = url
+        message = "Dataset updated successfully."
+    else:
+        config[name] = {"name": name, "url": url}
+        message = "Dataset added successfully."
 
-# Route: Modify an existing dataset
+    save_config(config)
+    return {
+        "message": message,
+        "dataset": config[name]
+    }
+
 @router.put("/dataset/{dataset_name}", tags=["Dataset"])
 async def modify_dataset(dataset_name: str, url: str = None):
     config = load_config()
@@ -48,7 +51,6 @@ async def modify_dataset(dataset_name: str, url: str = None):
     save_config(config)
     return {"message": "Dataset modified successfully.", "dataset": config[dataset_name]}
 
-# Route: Load dataset and return as JSON
 @router.get("/load-dataset/{dataset_name}", tags=["Dataset"])
 async def load_dataset(dataset_name: str):
     """

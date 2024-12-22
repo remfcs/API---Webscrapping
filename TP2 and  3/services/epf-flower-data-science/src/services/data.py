@@ -10,7 +10,7 @@ from sklearn.linear_model import LogisticRegression
 from google.cloud import firestore
 
 IRIS_DATASET_PATH = "src/data/iris/iris.csv"
-CONFIG_PATH = "src/config/datasets.json"
+CONFIG_PATH = "C:\\Users\\C Rémy\\OneDrive - Fondation EPF\\Documents\\klemLeti\\API---Webscrapping\\TP2 and  3\\services\\epf-flower-data-science\\src\\config\\datasets.json"
 DATASET_PATH = "src/data"
 MODEL_PARAMETERS_PATH = "src/config/model_parameters.json"
 MODEL_DIR = "src/models"
@@ -148,33 +148,26 @@ def train_model(data_json, model_name="LogisticRegression", target_column="Speci
     """
     from sklearn.model_selection import train_test_split
 
-    # Convert JSON to DataFrame
     import pandas as pd
     df = pd.DataFrame(data_json)
 
     if 'Id' in df.columns:
         df = df.drop(columns=['Id'])
         
-    # Separate features and target
     X = df.drop(columns=[target_column])
     y = df[target_column]
 
-    # Load model parameters
     params = load_model_parameters(model_name)
 
-    # Train the model
     if model_name == "LogisticRegression":
         model = LogisticRegression(**params)
     else:
         raise ValueError(f"Model '{model_name}' is not supported.")
 
-    # Split the dataset into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # Fit the model
     model.fit(X_train, y_train)
 
-    # Save the model
     model_path = os.path.join(MODEL_DIR, f"{model_name}.joblib")
     joblib.dump(model, model_path)
 
@@ -234,17 +227,13 @@ def get_firestore_parameters():
         dict: The parameters stored in the Firestore 'parameters' collection.
     """
     try:
-        # Initialize Firestore client
         db = firestore.Client()
-
-        # Access the 'parameters' collection and 'parameters' document
         doc_ref = db.collection("parameters").document("parameters")
         doc = doc_ref.get()
 
         if not doc.exists:
             raise ValueError("The document 'parameters' does not exist in Firestore.")
 
-        # Return the document data as a dictionary
         return doc.to_dict()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve parameters: {e}")
@@ -260,16 +249,12 @@ def add_or_update_parameters(data: dict):
         dict: Confirmation message with updated data.
     """
     try:
-        # Initialize Firestore client
         db = firestore.Client()
 
-        # Reference the 'parameters' collection and 'parameters' document
         doc_ref = db.collection("parameters").document("parameters")
 
-        # Merge the new data into the existing document
-        doc_ref.set(data, merge=True)  # merge=True ensures existing fields are preserved
+        doc_ref.set(data, merge=True)
 
-        # Return success message
         return {"message": "Parameters updated successfully.", "updated_data": data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update parameters: {e}")
